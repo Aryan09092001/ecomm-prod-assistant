@@ -4,6 +4,7 @@ packages = [
     "langchain",
     "langchain-core",
     "python-dotenv",
+    "streamlit"
 ]
 
 for pkg in packages:
