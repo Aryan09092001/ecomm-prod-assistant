@@ -4,6 +4,7 @@ import re
 import os
 import sys
 import platform
+import subprocess
 from bs4 import BeautifulSoup
 import undetected_chromedriver as uc
 from selenium.webdriver.common.by import By
@@ -25,6 +26,59 @@ def _uc_patched_set_platform_name(self):
 
 
 uc.patcher.Patcher._set_platform_name = _uc_patched_set_platform_name
+
+# uc rewrites bytes inside the chromedriver binary, which invalidates its macOS
+# code signature; the OS then kills the driver with SIGKILL (exit code -9).
+# Re-apply an ad-hoc signature after each patch so the binary can run again.
+# macOS-only; a no-op (best effort) on other platforms.
+_uc_orig_patch_exe = uc.patcher.Patcher.patch_exe
+
+
+def _uc_patched_patch_exe(self):
+    result = _uc_orig_patch_exe(self)
+    if sys.platform.endswith("darwin"):
+        try:
+            subprocess.run(
+                ["codesign", "--force", "--sign", "-", self.executable_path],
+                check=True,
+                capture_output=True,
+            )
+        except Exception:
+            pass
+    return result
+
+
+uc.patcher.Patcher.patch_exe = _uc_patched_patch_exe
+
+
+def _detect_chrome_major():
+    """Return the installed Chrome major version so uc downloads a matching
+    driver. Prevents "session not created: ChromeDriver only supports Chrome
+    version X" when the latest driver is ahead of the installed browser.
+    Returns None (uc falls back to latest) if detection fails.
+    """
+    candidates = []
+    if sys.platform.endswith("darwin"):
+        candidates = ["/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"]
+    elif sys.platform.startswith("win"):
+        candidates = [
+            r"C:\Program Files\Google\Chrome\Application\chrome.exe",
+            r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
+        ]
+    else:
+        candidates = ["google-chrome", "google-chrome-stable", "chromium-browser", "chromium"]
+    for path in candidates:
+        try:
+            out = subprocess.run([path, "--version"], capture_output=True, text=True, check=True).stdout
+            match = re.search(r"(\d+)\.\d+\.\d+", out)
+            if match:
+                return int(match.group(1))
+        except Exception:
+            continue
+    return None
+
+
+_CHROME_MAJOR = _detect_chrome_major()
 # --- end patch ---
 
 class FlipkartScraper:
@@ -38,7 +92,7 @@ class FlipkartScraper:
         options = uc.ChromeOptions()
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-blink-features=AutomationControlled")
-        driver = uc.Chrome(options=options,use_subprocess=True)
+        driver = uc.Chrome(options=options,use_subprocess=True,version_main=_CHROME_MAJOR)
 
         if not product_url.startswith("http"):
             driver.quit()
@@ -79,7 +133,7 @@ class FlipkartScraper:
         """Scrape Flipkart products based on a search query.
         """
         options = uc.ChromeOptions()
-        driver = uc.Chrome(options=options,use_subprocess=True)
+        driver = uc.Chrome(options=options,use_subprocess=True,version_main=_CHROME_MAJOR)
         search_url = f"https://www.flipkart.com/search?q={query.replace(' ', '+')}"
         driver.get(search_url)
         time.sleep(4)
