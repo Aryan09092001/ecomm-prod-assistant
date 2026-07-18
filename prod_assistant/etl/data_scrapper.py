@@ -2,11 +2,30 @@ import csv
 import time
 import re
 import os
+import sys
+import platform
 from bs4 import BeautifulSoup
 import undetected_chromedriver as uc
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.action_chains import ActionChains
+
+# --- Apple Silicon compatibility patch for undetected_chromedriver ---
+# uc 3.5.5 (latest) always downloads the Intel (mac-x64) chromedriver on macOS,
+# even on arm64 Macs, causing: OSError [Errno 86] Bad CPU type in executable.
+# This wraps its platform detection so Apple Silicon gets the native driver.
+# No-op on Intel Macs, Linux and CI, so it is safe to keep in the repo.
+_uc_orig_set_platform_name = uc.patcher.Patcher._set_platform_name
+
+
+def _uc_patched_set_platform_name(self):
+    _uc_orig_set_platform_name(self)
+    if sys.platform.endswith("darwin") and platform.machine() == "arm64":
+        self.platform_name = "mac_arm64" if self.is_old_chromedriver else "mac-arm64"
+
+
+uc.patcher.Patcher._set_platform_name = _uc_patched_set_platform_name
+# --- end patch ---
 
 class FlipkartScraper:
     def __init__(self, output_dir="data"):
