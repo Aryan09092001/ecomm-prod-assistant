@@ -13,6 +13,9 @@ import asyncio
 
 class ApiKeyManager:
     def __init__(self):
+        # Load .env here so keys are available no matter the caller's order
+        # (previously ModelLoader could be built before load_dotenv() ran).
+        load_dotenv()
         self.api_keys = {
             "OPENAI_API_KEY": os.getenv("OPENAI_API_KEY"),
             "GOOGLE_API_KEY": os.getenv("GOOGLE_API_KEY"),
@@ -60,7 +63,8 @@ class ModelLoader:
 
             return GoogleGenerativeAIEmbeddings(
                 model=model_name,
-                google_api_key=self.api_key_mgr.get("GOOGLE_API_KEY")  # type: ignore
+                google_api_key=self.api_key_mgr.get("GOOGLE_API_KEY"),  # type: ignore
+                output_dimensionality=768,  # match existing 768-dim Astra collection (text-embedding-004)
             )
         except Exception as e:
             log.error("Error loading embedding model", error=str(e))

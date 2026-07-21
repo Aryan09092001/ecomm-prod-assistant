@@ -72,7 +72,11 @@ class DataIngestion:
         """
         product_list = []
 
-        for _, row in self.product_data.iterrows():
+        # Replace NaN (from empty CSV cells) with empty strings so values
+        # are JSON-serializable when sent to AstraDB.
+        clean_data = self.product_data.where(pd.notnull(self.product_data), "")
+
+        for _, row in clean_data.iterrows():
             product_entry = {
                     "product_id": row["product_id"],
                     "product_title": row["product_title"],
