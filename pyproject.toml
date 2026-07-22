@@ -1,3 +1,7 @@
+[build-system]
+requires = ["setuptools>=68"]         # PEP 660 editable support ke liye naya setuptools
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "ecomm-prod-assistant"
 version = "0.1.0"
@@ -5,7 +9,15 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "langchain==1.3.14",
-    "langchain-core==1.4.9",
-    "python-dotenv==1.2.2",
+    "fastapi>=0.116.1",
+    "langchain==0.3.27",
+    # TIP: 'langchain-core' ko alag pin na karo; 'langchain' sahi version le aayega.
+    # Agar zaroori ho, to compatible pair hi pin karo.
+    "python-dotenv==1.1.1",
+    "streamlit==1.49.1",
 ]
+
+[tool.setuptools.packages.find]
+where = ["prod_assistant"]
+include = ["ecomm_prod_assistant*"]
+
