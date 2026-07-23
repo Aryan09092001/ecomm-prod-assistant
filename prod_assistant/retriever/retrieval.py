@@ -18,7 +18,6 @@ project_root = Path(__file__).resolve().parents[2]     # = /Users/aryan/ecomm-pr
 # even when you run this file directly (python path/to/retrieval.py).
 sys.path.insert(0, str(project_root))
 
-
 # ── The Retriever class: fetches relevant reviews from the vector DB ──────────
 class Retriever:
     def __init__(self):
