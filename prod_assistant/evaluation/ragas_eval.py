@@ -54,7 +54,8 @@ def evaluate_response_relevancy(query, response, retrieved_context):
             evaluator_llm = LangchainLLMWrapper(llm)               # wrap the LLM for RAGAS
             embedding_model = model_loader.load_embeddings()       # this metric ALSO needs embeddings
             evaluator_embeddings = LangchainEmbeddingsWrapper(embedding_model)  # wrap the embeddings
-            scorer = ResponseRelevancy(llm=evaluator_llm, embeddings=evaluator_embeddings)  # the metric
+            # strictness=1 → generate only 1 question (Groq rejects n>1, unlike OpenAI)
+            scorer = ResponseRelevancy(llm=evaluator_llm, embeddings=evaluator_embeddings, strictness=1)  # the metric
             result = await scorer.single_turn_ascore(sample)       # run the async score and wait for it
             return result                                          # a number (higher = more relevant)
 

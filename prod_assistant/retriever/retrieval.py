@@ -99,11 +99,19 @@ class Retriever:
 
 # ── Run this block only when the file is executed directly (not imported) ─────
 if __name__ == '__main__':
-    user_query = "Can you suggest good budget iPhone under 1,00,00 INR?"  # the test question
+    user_query = "Can you suggest good budget Google Pixels under 1,00,00 INR?"  # the test question
 
     retriever_obj = Retriever()                          # create the retriever (loads config/secrets/models)
 
     retrieved_docs = retriever_obj.call_retriever(user_query)  # fetch the most relevant review docs
+
+    # Show the question and the documents that were retrieved for it.
+    print(f"\n=== Query ===\n{user_query}\n")
+    print(f"=== Retrieved {len(retrieved_docs)} document(s) ===")
+    for idx, doc in enumerate(retrieved_docs, 1):
+        print(f"\n--- Result {idx} ---")
+        print("Metadata:", doc.metadata)
+        print("Content:", doc.page_content)
 
     # Helper: turn the retrieved Document objects into readable text blocks.
     def _format_docs(docs) -> str:
