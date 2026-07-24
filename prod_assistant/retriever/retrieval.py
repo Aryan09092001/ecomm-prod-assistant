@@ -58,7 +58,7 @@ class Retriever:
                 search_kwargs={"k": top_k,
                                 "fetch_k": 20,
                                 "lambda_mult": 0.7,
-                                "score_threshold": 0.7
+                                "score_threshold": 0.6
                                })
             print("Retriever loaded successfully.")
             
