@@ -99,7 +99,7 @@ class Retriever:
 
 # ── Run this block only when the file is executed directly (not imported) ─────
 if __name__ == '__main__':
-    user_query = "Can you suggest good budget Google Pixels under 1,00,00 INR?"  # the test question
+    user_query = "Is the Lenovo IdeaPad Slim 5 a good laptop?"  # the test question
 
     retriever_obj = Retriever()                          # create the retriever (loads config/secrets/models)
 
@@ -129,7 +129,7 @@ if __name__ == '__main__':
             formatted_chunks.append(formatted)
         return "\n\n---\n\n".join(formatted_chunks)       # join all docs with a separator
 
-    retrieved_contexts = [_format_docs(doc) for doc in retrieved_docs]  # format each doc into text
+    retrieved_contexts = [_format_docs([doc]) for doc in retrieved_docs]  # format each doc into text (pass a 1-item list)
 
     #this is not an actual output this have been written to test the pipeline
     response="iphone 16 plus, iphone 16, iphone 15 are best phones under 1,00,000 INR."  # fake answer for testing
